@@ -9,6 +9,7 @@ import ChartSection from './components/dashboard/ChartSection';
 import TableSection from './components/dashboard/TableSection';
 import ActivityFeed from './components/dashboard/ActivityFeed';
 import Users from './page/Users';
+import Calendar from './components/Calendar';
 
 import Login from './page/Login';
 import Register from './page/Register';
@@ -122,6 +123,7 @@ function App() {
                 } />
 
                 <Route path="/team" element={<Users />} />
+                <Route path="/calendar" element={<Calendar />} />
             </Route>
             
             {/* ទំព័រមិនស្គាល់ ឬទំព័រដើម */}

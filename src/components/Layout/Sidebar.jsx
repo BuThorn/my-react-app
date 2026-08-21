@@ -156,6 +156,7 @@ export default function Sidebar({
       });
     } else {
       onPageChange(item.id);
+      navigate(`/${item.id}`);
     }
   };
 
