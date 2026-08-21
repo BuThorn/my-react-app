@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vercel/global-config": "^1.5.1",
     "bcryptjs": "^3.0.3",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.31.0",

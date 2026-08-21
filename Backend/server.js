@@ -111,4 +111,12 @@ app.get('/api/health', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
+
+app.get('/api/greeting', verifyToken, (req, res) => {
+    const fallbackGreeting = `សូមស្វាគមន៍មកកាន់ Dashboard, ${req.user.username}!`;
+    const greeting = process.env.GREETING || fallbackGreeting;
+
+    res.json({ greeting });
+});
+
 app.listen(PORT, () => console.log(`Server កំពុងដំណើរការលើ Port ${PORT} ជាមួយ MySQL`));

@@ -1,10 +1,30 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, ChevronDown, Filter, LogOut, Menu, Plus, Settings, Sun } from 'lucide-react';
 import profileImage from '../../assets/img.jpg';
+import { fetchGreeting } from '../../services/api';
 
 function Header({ onToggleSidebar = () => {}, isDarkMode = false, onToggleTheme = () => {} }) {
     const navigate = useNavigate();
+    const [greeting, setGreeting] = useState('Welcome back!');
+
+    useEffect(() => {
+        let isMounted = true;
+
+        fetchGreeting()
+            .then((message) => {
+                if (isMounted && message) {
+                    setGreeting(message);
+                }
+            })
+            .catch(() => {
+                // Keep the dashboard usable while the API is unavailable.
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -30,9 +50,7 @@ function Header({ onToggleSidebar = () => {}, isDarkMode = false, onToggleTheme 
                         <h1 className="text-2xl font-black text-slate-800 dark:text-white">
                             Dashboard
                         </h1>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
-                            Welcome back, Alex! here's what's happening today.
-                        </p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">{greeting}</p>
                     </div>
                 </div>
 
