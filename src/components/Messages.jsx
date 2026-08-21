@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Mail, MessageSquare, Search, Send, User } from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 function Messages() {
     const [conversations, setConversations] = useState([]);
     const [selectedId, setSelectedId] = useState(null);
@@ -9,7 +11,7 @@ function Messages() {
     const [search, setSearch] = useState('');
     const [reply, setReply] = useState('');
     const [loadingChats, setLoadingChats] = useState(true);
-    const [LoadingMessages, setLoadingMessages] = useState(false);
+    const [loadingMessages, setLoadingMessages] = useState(false);
 
     const messagesEndRef = useRef(null);
 
@@ -80,7 +82,7 @@ function Messages() {
     const selectedConversation = conversations.find((c) => c.id === selectedId);
 
     // ៥. មុខងារនៅពេលចុចជ្រើសរើស Chat (ប្តូរ ID និងលុបចំនួន Unread ទៅជា 0)
-    const selectConversation = (conversation) => {
+    const selectConversation = async (conversation) => {
         setSelectedId(conversation.id);
 
         // បើមានសារមិនទាន់អាន ត្រូវ Update ទៅ Backend ឱ្យទៅជា 0
@@ -151,7 +153,7 @@ function Messages() {
                             </div>
                        </div>
                        <div className="max-h-[420px] overflow-auto p-2">
-                            {LoadingChats ? (
+                            {loadingChats ? (
                                 <div className="p-4 text-center text-sm text-slate-400">កំពុងទាញយកទិន្នន័យ...</div>
                             ) : filteredConversations.map((conversation) => (
                                 <button key={conversation.id} type="button" onClick={() => selectConversation(conversation)} className={`group flex w-full items-center gap-3 rounded-lg p-3 text-left transition ${selectedId === conversation.id ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300' : 'text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700'}`}>
