@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
 
 const weekdayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
 const monthFormatter = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' });
@@ -48,6 +48,10 @@ function Calendar() {
             ...previous,
             { id: Date.now(), title: title.trim(), time: 'All day', type: 'Personal' },
         ]);
+    };
+
+    const deleteEvent = (eventId) => {
+        setEvents((previous) => previous.filter((event) => event.id !== eventId));
     };
 
     return (
@@ -106,7 +110,18 @@ function Calendar() {
                                 <p className="font-medium text-slate-900 dark:text-white">{event.title}</p>
                                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{event.type}</p>
                             </div>
-                            <time className="shrink-0 text-sm font-medium text-slate-600 dark:text-slate-300">{event.time}</time>
+                            <div className="flex shrink-0 items-center gap-2">
+                                <time className="text-sm font-medium text-slate-600 dark:text-slate-300">{event.time}</time>
+                                <button
+                                    type="button"
+                                    onClick={() => deleteEvent(event.id)}
+                                    aria-label={`Delete ${event.title}`}
+                                    title="Delete event"
+                                    className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-300"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>
