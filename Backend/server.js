@@ -197,4 +197,81 @@ app.get('/api/greeting', verifyToken, (req, res) => {
     res.json({ greeting });
 });
 
+
+// ==========================================
+// 🆕 ប្រព័ន្ធគ្រប់គ្រងក្រុមការងារ (Team Members API)
+// ==========================================
+
+// 1. ទាញយកបញ្ជីសមាជិកទាំងអស់
+app.get('/api/team', verifyToken, async (req, res) => {
+    try {
+        const [members] = await db.query('SELECT * FROM team_members ORDER BY id DESC');
+        res.json(members);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'មិនអាចទាញយកទិន្នន័យសមាជិកបានទេ' });
+    }
+});
+
+// 2. បន្ថែមសមាជិកថ្មី (Create)
+app.post('/api/team', verifyToken, async (req, res) => {
+    try {
+        const { name, email, role, status } = req.body;
+        if (!name || !email || !role) {
+            return res.status(400).json({ message: 'សូមបំពេញព័ត៌មានចាំបាច់ឲ្យបានគ្រប់គ្រាន់' });
+        }
+
+        // ពិនិត្យមើលអ៊ីមែលជាន់គ្នា
+        const [existing] = await db.query('SELECT * FROM team_members WHERE email = ?', [email]);
+        if (existing.length > 0) {
+            return res.status(400).json({ message: 'អ៊ីមែលនេះមានគេប្រើរួចហើយ!' });
+        }
+
+        const [result] = await db.query(
+            'INSERT INTO team_members (name, email, role, status) VALUES (?, ?, ?, ?)',
+            [name, email, role, status || 'Active']
+        );
+
+        res.status(201).json({ 
+            id: result.insertId, 
+            name, email, role, status: status || 'Active',
+            message: 'បន្ថែមសមាជិកបានជោគជ័យ!' 
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'មានបញ្ហាក្នុងការបន្ថែមសមាជិក' });
+    }
+});
+
+// 3. កែប្រែព័ត៌មានសមាជិក (Update)
+app.put('/api/team/:id', verifyToken, async (req, res) => {
+    try {
+        const memberId = req.params.id;
+        const { name, email, role, status } = req.body;
+
+        await db.query(
+            'UPDATE team_members SET name = ?, email = ?, role = ?, status = ? WHERE id = ?',
+            [name, email, role, status, memberId]
+        );
+
+        res.json({ success: true, message: 'ធ្វើបច្ចុប្បន្នភាពបានជោគជ័យ!' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'មានបញ្ហាក្នុងការកែប្រែទិន្នន័យ' });
+    }
+});
+
+// 4. លុបសមាជិកចេញពីប្រព័ន្ធ (Delete)
+app.delete('/api/team/:id', verifyToken, async (req, res) => {
+    try {
+        const memberId = req.params.id;
+        await db.query('DELETE FROM team_members WHERE id = ?', [memberId]);
+        res.json({ success: true, message: 'លុបសមាជិកបានជោគជ័យ!' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'មានបញ្ហាក្នុងការលុបទិន្នន័យ' });
+    }
+});
+
+
 app.listen(PORT, () => console.log(`Server កំពុងដំណើរការលើ Port ${PORT} ជាមួយ MySQL`));
