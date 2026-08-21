@@ -11,3 +11,36 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+
+
+-- ១. បង្កើតតារាងបញ្ជីទំនាក់ទំនងសន្ទនា
+CREATE TABLE conversations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    preview VARCHAR(255),
+    time VARCHAR(50),
+    unread INT DEFAULT 0
+);
+
+-- ២. បង្កើតតារាងរក្សាទុកប្រវត្តិនៃសារនីមួយៗ
+CREATE TABLE messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    conversation_id INT NOT NULL,
+    author VARCHAR(100) NOT NULL,
+    text TEXT NOT NULL,
+    time VARCHAR(50) NOT NULL,
+    FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
+);
+
+-- ៣. បញ្ចូលទិន្នន័យគំរូដើម្បីតេស្ត (Optional)
+INSERT INTO conversations (name, email, preview, time, unread) VALUES 
+('Alex Johnson', 'alex@example.com', 'The latest dashboard numbers are ready.', '09:42', 2),
+('Olivia Martin', 'olivia@example.com', 'Can we move the client call to tomorrow?', 'Yesterday', 0);
+
+INSERT INTO messages (conversation_id, author, text, time) VALUES 
+(1, 'Alex Johnson', 'The latest dashboard numbers are ready.', '09:42'),
+(1, 'You', 'Great, I will review them this morning.', '09:47'),
+(2, 'Olivia Martin', 'Can we move the client call to tomorrow?', 'Yesterday');
