@@ -160,6 +160,22 @@ export default function Sidebar({
     }
   };
 
+  const handleSubmenuClick = (submenuItem) => {
+    if (submenuItem.id === 'team-members') {
+      onPageChange('team');
+      navigate('/team');
+      return;
+    }
+
+    if (submenuItem.id === 'content-overview' || submenuItem.id === 'posts' || submenuItem.id === 'social-media' || submenuItem.id === 'content-performance') {
+      onPageChange(submenuItem.id);
+      navigate(`/content/${submenuItem.id}`);
+      return;
+    }
+
+    onPageChange(submenuItem.id);
+  };
+
   const handleLogout = async () => {
     // កន្លែងសរសេរ Logic ចាកចេញ (ឧទាហរណ៍៖ លុប token)
     await new Promise((resolve) => setTimeout(resolve, 1000)); 
@@ -253,7 +269,7 @@ export default function Sidebar({
                     <button
                       key={sub.id}
                       type="button"
-                      onClick={() => onPageChange(sub.id)}
+                      onClick={() => handleSubmenuClick(sub)}
                       className={`w-full text-left p-2 text-sm rounded-md transition-colors ${
                         currentPage === sub.id
                           ? "text-blue-600 dark:text-blue-400 font-medium"

@@ -4,10 +4,9 @@ import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
 
-import StartsGrid from './components/dashboard/StartsGrid';
-import ChartSection from './components/dashboard/ChartSection';
-import TableSection from './components/dashboard/TableSection';
-import ActivityFeed from './components/dashboard/ActivityFeed';
+import Dashboard from './page/Dashboard';
+import Content from './page/content/Content';
+import ProfileSettings from './components/ProfileSettings';
 import Users from './page/Users';
 import Calendar from './components/Calendar';
 import Messages from './components/Messages';
@@ -97,35 +96,29 @@ function App() {
 
     return (
         <Routes>
-        ​​​​​​    {/* ទំព័រសាធារណៈ */}
+            {/* ទំព័រសាធារណៈ */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
             <Route element={
                 <ProtectedLayout 
-                ​​​​​      isCollapsed={isCollapsed} 
+                        isCollapsed={isCollapsed}
                       setIsCollapsed={setIsCollapsed} 
-                ​​​​​​​​      currentPage={currentPage}
+                        currentPage={currentPage}
                       onPageChange={setCurrentPage}
                       isDarkMode={isDarkMode}
                       onToggleTheme={handleToggleTheme}
                 />
             }>
 
-                <Route path="/dashboard" element={
-                    <>
-                        <StartsGrid />
-                        <ChartSection />
-                        <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
-                            <TableSection />
-                            <ActivityFeed />
-                        </div>
-                    </>
-                } />
+                <Route path="/dashboard" element={<Dashboard />} />
 
                 <Route path="/team" element={<Users />} />
                 <Route path="/calendar" element={<Calendar />} />
                 <Route path="/messages" element={<Messages />} />
+                <Route path="/profile" element={<ProfileSettings />} />
+                <Route path="/content/:section" element={<Content />} />
+                <Route path="/content" element={<Content />} />
             </Route>
             
             {/* ទំព័រមិនស្គាល់ ឬទំព័រដើម */}

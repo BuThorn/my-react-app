@@ -121,6 +121,7 @@ function Header({ onToggleSidebar = () => {}, isDarkMode = false, onToggleTheme 
                     <button
                         type="button"
                         aria-label="Open user profile"
+                        onClick={() => navigate('/profile')}
                         className="flex items-center space-x-2 rounded-lg bg-slate-100 p-2 text-left transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
                     >
                         <img
