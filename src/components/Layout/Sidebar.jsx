@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { LogoutButton } from '../LogoutButton';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -18,11 +19,18 @@ import {
 } from 'lucide-react';
 import profileImage from '../../assets/img.jpg';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const defaultMenuItems = [
   {
     id: 'dashboard',
     label: 'Dashboard',
     icon: LayoutDashboard,
+  },
+  {
+    id: 'customers',
+    label: 'Customers',
+    icon: Users,
   },
   {
     id: 'clients',
@@ -120,6 +128,11 @@ const defaultMenuItems = [
     badge: 5,
   },
   {
+    id: 'account',
+    label: 'Accounts',
+    icon: Users,
+  },
+  {
     id: 'settings',
     label: 'Settings',
     icon: Settings,
@@ -139,9 +152,36 @@ export default function Sidebar({
   menuItems = defaultMenuItems,
 }) {
   const navigate = useNavigate();
+  const [profile, setProfile] = useState({
+    username: localStorage.getItem('username') || 'Admin User',
+    email: '',
+  });
   const [expandedItems, setExpandedItems] = useState(() => new Set(
     menuItems.filter((item) => item.active && item.submenu?.length).map((item) => item.id),
   ));
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const syncProfile = async () => {
+      try {
+        const { data } = await axios.get(`${API_BASE_URL}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const nextUsername = data.username || localStorage.getItem('username') || 'Admin User';
+        const nextEmail = data.email || '';
+
+        setProfile({ username: nextUsername, email: nextEmail });
+        localStorage.setItem('username', nextUsername);
+      } catch (error) {
+        console.error('Failed to load sidebar profile:', error);
+      }
+    };
+
+    syncProfile();
+  }, []);
 
   const handleItemClick = (item) => {
     if (item.submenu?.length) {
@@ -154,16 +194,35 @@ export default function Sidebar({
         }
         return next;
       });
-    } else {
-      onPageChange(item.id);
-      navigate(`/${item.id}`);
+      return;
     }
+
+    if (item.id === 'account') {
+      onPageChange('account');
+      navigate('/account');
+      return;
+    }
+
+    onPageChange(item.id);
+    navigate(`/${item.id}`);
   };
 
   const handleSubmenuClick = (submenuItem) => {
     if (submenuItem.id === 'team-members') {
       onPageChange('team');
       navigate('/team');
+      return;
+    }
+
+    if (submenuItem.id === 'all-clients' || submenuItem.id === 'active-clients' || submenuItem.id === 'add-client' || submenuItem.id === 'client-groups') {
+      onPageChange('customers');
+      navigate('/customers');
+      return;
+    }
+
+    if (submenuItem.id === 'general' || submenuItem.id === 'notifications' || submenuItem.id === 'permissions') {
+      onPageChange('settings');
+      navigate('/settings');
       return;
     }
 
@@ -176,10 +235,17 @@ export default function Sidebar({
     onPageChange(submenuItem.id);
   };
 
+  const handleProfileClick = () => {
+    onPageChange('profile');
+    navigate('/profile');
+  };
+
   const handleLogout = async () => {
-    // កន្លែងសរសេរ Logic ចាកចេញ (ឧទាហរណ៍៖ លុប token)
-    await new Promise((resolve) => setTimeout(resolve, 1000)); 
-    navigate('/login');
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    localStorage.removeItem('isLoggedIn');
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -288,7 +354,12 @@ export default function Sidebar({
 
       {/* User Profile & Reusable Logout Button */}
       <div className="p-4 border-t border-slate-200/50 dark:border-slate-700/50 space-y-3 bg-slate-50/50 dark:bg-slate-900/50">
-        <div className="flex items-center gap-3 min-w-0">
+        <button
+          type="button"
+          onClick={handleProfileClick}
+          className="flex w-full items-center gap-3 min-w-0 rounded-lg p-2 text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+          aria-label="Open profile settings"
+        >
           <img
             src={profileImage}
             alt="Profile"
@@ -297,16 +368,15 @@ export default function Sidebar({
           {!collapsed && (
             <div className="truncate flex-1">
               <h2 className="text-sm font-semibold text-slate-800 dark:text-white truncate">
-                Bunthorng
+                {profile.username}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                thorng@admin.com
+                {profile.email || 'No email available'}
               </p>
             </div>
           )}
-        </div>
+        </button>
 
-        {/* ហៅប្រើប្រាស់ LogoutButton Component */}
         <LogoutButton
           onLogout={handleLogout}
           showText={!collapsed}

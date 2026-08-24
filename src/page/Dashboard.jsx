@@ -5,6 +5,7 @@ import StartsGrid from '../components/dashboard/StartsGrid';
 import ChartSection from '../components/dashboard/ChartSection';
 import TableSection from '../components/dashboard/TableSection';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
+import DashboardProfile from '../components/dashboard/DashboardProfile';
 
 function Dashboard() {
     const navigate = useNavigate();
@@ -18,7 +19,7 @@ function Dashboard() {
 
     return (
         <div className="space-y-4 p-4">
-            
+            <DashboardProfile />
             <StartsGrid />
             <ChartSection />
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">

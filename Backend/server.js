@@ -4,7 +4,8 @@ const http = require('http');
 const { Server } = require('socket.io');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
+const { verifyToken } = require('./authMiddleware');
 require('dotenv').config();
 
 const app = express();
@@ -24,7 +25,7 @@ const db = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-}).promise(); // Allows using async/await
+});
 
 // ================================
 // 2. SOCKET.I0 SETUP EVENTS 
@@ -140,26 +141,6 @@ app.post('/api/login', async (req, res) => {
         res.status(500).json({ message: 'មានបញ្ហាបច្ចេកទេសខាង Server' });
     }
 });
-
-// Protected Route Middleware
-const verifyToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-
-    if (!authHeader) {
-        return res.status(403).json({ message: 'តម្រូវឲ្យមាន Token ដើម្បីចូល' });
-    }
-
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
-
-    jwt.verify(token, JWT_SECRET, (err, decoded) => {
-        if (err) {
-            return res.status(401).json({ message: 'Token មិនត្រឹមត្រូវ ឬហួសកំណត់' });
-        }
-
-        req.user = decoded;
-        next();
-    });
-};
 
 // ==========================================
 // 🆕 បន្ថែមផ្នែកទាក់ទងនឹងប្រព័ន្ធផ្ញើសារ (Messages System)
@@ -481,6 +462,131 @@ app.put('/api/profile', verifyToken, async (req, res) => {
     }
 });
 
+const ensureUserSettingsTable = async () => {
+    await db.query(`
+        CREATE TABLE IF NOT EXISTS user_settings (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL UNIQUE,
+            email VARCHAR(255) DEFAULT '',
+            notifications TINYINT(1) DEFAULT 1,
+            dark_mode TINYINT(1) DEFAULT 0,
+            language VARCHAR(50) DEFAULT 'khmer',
+            permissions JSON DEFAULT ('{"dashboard":true,"team":true,"settings":true}'),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            CONSTRAINT fk_user_settings_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    await db.query(`
+        ALTER TABLE user_settings
+        ADD COLUMN IF NOT EXISTS permissions JSON DEFAULT ('{"dashboard":true,"team":true,"settings":true}')
+    `);
+};
+
+// API: ទាញយកទិន្នន័យ Settings ของ User
+app.get('/api/settings', verifyToken, async (req, res) => {
+    try {
+        await ensureUserSettingsTable();
+
+        const userId = req.user.id;
+        const [rows] = await db.query(
+            `SELECT u.username,
+                    COALESCE(us.email, '') AS email,
+                    COALESCE(us.notifications, 1) AS notifications,
+                    COALESCE(us.dark_mode, 0) AS darkMode,
+                    COALESCE(us.language, 'khmer') AS language,
+                    COALESCE(us.permissions, '{"dashboard":true,"team":true,"settings":true}') AS permissions
+             FROM users u
+             LEFT JOIN user_settings us ON us.user_id = u.id
+             WHERE u.id = ?`,
+            [userId]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'រកមិនឃើញទិន្នន័យសម្រាប់អ្នកប្រើនេះទេ' });
+        }
+
+        let permissions = {
+            dashboard: true,
+            team: true,
+            settings: true,
+        };
+
+        if (rows[0].permissions) {
+            try {
+                permissions = typeof rows[0].permissions === 'string'
+                    ? JSON.parse(rows[0].permissions)
+                    : rows[0].permissions;
+            } catch (error) {
+                console.warn('Invalid permissions JSON, falling back to defaults');
+            }
+        }
+
+        const settings = {
+            username: rows[0].username || '',
+            email: rows[0].email || '',
+            notifications: Boolean(Number(rows[0].notifications)),
+            darkMode: Boolean(Number(rows[0].darkMode)),
+            language: rows[0].language || 'khmer',
+            permissions,
+        };
+
+        res.json(settings);
+    } catch (error) {
+        console.error('Fetch Settings Error:', error);
+        res.status(500).json({ message: 'មានបញ្ហាក្នុងការទាញយកទិន្នន័យ' });
+    }
+});
+
+// API: កែប្រែ និងរក្សាទុក Settings
+app.put('/api/settings', verifyToken, async (req, res) => {
+    try {
+        await ensureUserSettingsTable();
+
+        const userId = req.user.id;
+        const { username, email, notifications, darkMode, language, permissions } = req.body;
+
+        const safeUsername = String(username || '').trim();
+        if (!safeUsername) {
+            return res.status(400).json({ message: 'សូមបំពេញឈ្មោះអ្នកប្រើប្រាស់' });
+        }
+
+        const safePermissions = permissions && typeof permissions === 'object'
+            ? permissions
+            : {
+                dashboard: true,
+                team: true,
+                settings: true,
+            };
+
+        await db.query('UPDATE users SET username = ? WHERE id = ?', [safeUsername, userId]);
+
+        await db.query(
+            `INSERT INTO user_settings (user_id, email, notifications, dark_mode, language, permissions)
+             VALUES (?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+               email = VALUES(email),
+               notifications = VALUES(notifications),
+               dark_mode = VALUES(dark_mode),
+               language = VALUES(language),
+               permissions = VALUES(permissions)`,
+            [
+                userId,
+                String(email || ''),
+                notifications ? 1 : 0,
+                darkMode ? 1 : 0,
+                String(language || 'khmer'),
+                JSON.stringify(safePermissions),
+            ]
+        );
+
+        res.json({ success: true, message: 'រក្សាទុកការកំណត់បានជោគជ័យ!' });
+    } catch (error) {
+        console.error('Update Settings Error:', error);
+        res.status(500).json({ message: 'មានបញ្ហាក្នុងការរក្សាទុកទិន្នន័យ' });
+    }
+});
 
 
 // ==========================
@@ -488,8 +594,17 @@ app.put('/api/profile', verifyToken, async (req, res) => {
 // ==========================
 const PORT = process.env.PORT || 5000;
 
-// ប្រើប្រាស់ server.listen (HTTP + Socket.IO) ជំនួស app.listen
-server.listen(PORT, () => {
-    console.log(`Server កំពុងដំណើរការលើ​ Port ${PORT} ជាមួយ HTTP និង​ Socket.IO`);
-});
+const startServer = async () => {
+    try {
+        await ensureUserSettingsTable();
+        server.listen(PORT, () => {
+            console.log(`Server កំពុងដំណើរការលើ​ Port ${PORT} ជាមួយ HTTP និង​ Socket.IO`);
+        });
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
+};
+
+startServer();
 

@@ -7,9 +7,12 @@ import Header from './components/Layout/Header';
 import Dashboard from './page/Dashboard';
 import Content from './page/content/Content';
 import ProfileSettings from './components/ProfileSettings';
+import Acount from './page/Acount';
 import Users from './page/Users';
+import Customers from './page/Customers';
 import Calendar from './components/Calendar';
 import Messages from './components/Messages';
+import SettingsPage from './page/SettingsPage';
 
 import Login from './page/Login';
 import Register from './page/Register';
@@ -114,9 +117,13 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
 
                 <Route path="/team" element={<Users />} />
+                <Route path="/customers" element={<Customers />} />
+                <Route path="/clients" element={<Customers />} />
                 <Route path="/calendar" element={<Calendar />} />
                 <Route path="/messages" element={<Messages />} />
+                <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/profile" element={<ProfileSettings />} />
+                <Route path="/account" element={<Acount />} />
                 <Route path="/content/:section" element={<Content />} />
                 <Route path="/content" element={<Content />} />
             </Route>
