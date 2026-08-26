@@ -1,3 +1,6 @@
+-- For phpMyAdmin imports, use database.sql in the project root.
+-- This file contains historical setup notes and one-time migration statements.
+
 -- ១. បង្កើត Database ឈ្មោះថា my_app_db
 CREATE DATABASE IF NOT EXISTS my_app_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

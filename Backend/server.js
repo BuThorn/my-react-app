@@ -162,11 +162,11 @@ const verifyToken = (req, res, next) => {
 };
 
 // ==========================================
-// 🆕 បន្ថែមផ្នែកទាក់ទងនឹងប្រព័ន្ធផ្ញើសារ (Messages System)
+// 🆕 បន្ថែមផ្នែកទាក់ទងនឹងប្រព័ន្ធជជែក (Chats System)
 // ==========================================
 
 // 3. ទាញយកបញ្ជីការសន្ទនាទាំងអស់ (Conversations List)
-app.get('/api/conversations', verifyToken, async (req, res) => {
+app.get(['/api/chats', '/api/conversations'], verifyToken, async (req, res) => {
     try {
         // ទាញទិន្នន័យទំនាក់ទំនងទាំងអស់ដើម្បីបង្ហាញនៅ Sidebar ខាងឆ្វេង
         const [conversations] = await db.query('SELECT * FROM conversations ORDER BY id DESC');
@@ -178,7 +178,7 @@ app.get('/api/conversations', verifyToken, async (req, res) => {
 });
 
 // 4. ទាញយកសារលម្អិតនៅក្នុង Chat នីមួយៗ (Messages by Conversation ID)
-app.get('/api/conversations/:id/messages', verifyToken, validateConversationId, requireConversation, async (req, res) => {
+app.get(['/api/chats/:id/messages', '/api/conversations/:id/messages'], verifyToken, validateConversationId, requireConversation, async (req, res) => {
     try {
         const conversationId = req.conversationId;
         const [messages] = await db.query(
@@ -193,7 +193,7 @@ app.get('/api/conversations/:id/messages', verifyToken, validateConversationId, 
 });
 
 // 5. ផ្ញើសារថ្មី និងធ្វើបច្ចុប្បន្នភាព Preview (Send Message & Update Preview)
-app.post('/api/conversations/:id/messages', verifyToken, validateConversationId, requireConversation, async (req, res) => {
+app.post(['/api/chats/:id/messages', '/api/conversations/:id/messages'], verifyToken, validateConversationId, requireConversation, async (req, res) => {
     try {
         const conversationId = req.conversationId;
         const text = String(req.body.text || '').trim();
@@ -267,7 +267,7 @@ app.post('/api/conversations/:id/messages', verifyToken, validateConversationId,
 });
 
 // 6. លុបចំនួន Unread ឱ្យទៅជា 0 ពេលចុចមើល Chat
-app.put('/api/conversations/:id/read', verifyToken, validateConversationId, requireConversation, async (req, res) => {
+app.put(['/api/chats/:id/read', '/api/conversations/:id/read'], verifyToken, validateConversationId, requireConversation, async (req, res) => {
     try {
         const conversationId = req.conversationId;
         await db.query('UPDATE conversations SET unread = 0 WHERE id = ?', [conversationId]);
@@ -279,7 +279,7 @@ app.put('/api/conversations/:id/read', verifyToken, validateConversationId, requ
     }
 });
 
-app.put('/api/conversations/:conversationId/messages/:messageId', verifyToken, async (req, res) => {
+app.put(['/api/chats/:conversationId/messages/:messageId', '/api/conversations/:conversationId/messages/:messageId'], verifyToken, async (req, res) => {
     try {
         const conversationId = Number(req.params.conversationId);
         const messageId = Number(req.params.messageId);
@@ -307,7 +307,7 @@ app.put('/api/conversations/:conversationId/messages/:messageId', verifyToken, a
     }
 });
 
-app.delete('/api/conversations/:conversationId/messages/:messageId', verifyToken, async (req, res) => {
+app.delete(['/api/chats/:conversationId/messages/:messageId', '/api/conversations/:conversationId/messages/:messageId'], verifyToken, async (req, res) => {
     try {
         const conversationId = Number(req.params.conversationId);
         const messageId = Number(req.params.messageId);

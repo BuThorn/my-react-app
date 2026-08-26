@@ -9,7 +9,7 @@ import Content from './page/content/Content';
 import ProfileSettings from './components/ProfileSettings';
 import Users from './page/Users';
 import Calendar from './components/Calendar';
-import Messages from './components/Messages';
+import Chats from './components/Chats';
 
 import Login from './page/Login';
 import Register from './page/Register';
@@ -115,7 +115,7 @@ function App() {
 
                 <Route path="/team" element={<Users />} />
                 <Route path="/calendar" element={<Calendar />} />
-                <Route path="/messages" element={<Messages />} />
+                <Route path="/messages" element={<Chats />} />
                 <Route path="/profile" element={<ProfileSettings />} />
                 <Route path="/content/:section" element={<Content />} />
                 <Route path="/content" element={<Content />} />

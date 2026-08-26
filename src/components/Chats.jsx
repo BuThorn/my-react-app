@@ -6,7 +6,7 @@ import { Mail, MessageSquare, Paperclip, Phone, Search, Send, Smile, User, X, Ch
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-function Messages() {
+function Chats() {
     const [conversations, setConversations] = useState([]);
     const [selectedId, setSelectedId] = useState(null);
     const [activeMessages, setActiveMessages] = useState([]);
@@ -27,7 +27,7 @@ function Messages() {
         const fetchConversations = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const response = await axios.get(`${API_BASE_URL}/api/conversations`, {
+                const response = await axios.get(`${API_BASE_URL}/api/chats`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setConversations(response.data);
@@ -94,7 +94,7 @@ function Messages() {
             setLoadingMessages(true);
             try {
                 const token = localStorage.getItem('token');
-                const response = await axios.get(`${API_BASE_URL}/api/conversations/${selectedId}/messages`, {
+                const response = await axios.get(`${API_BASE_URL}/api/chats/${selectedId}/messages`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setActiveMessages(() => {
@@ -154,7 +154,7 @@ function Messages() {
         if (conversation.unread > 0) {
             try {
                 const token = localStorage.getItem('token');
-                await axios.put(`${API_BASE_URL}/api/conversations/${conversation.id}/read`, {}, {
+                await axios.put(`${API_BASE_URL}/api/chats/${conversation.id}/read`, {}, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
@@ -176,7 +176,7 @@ function Messages() {
         try {
             const token = localStorage.getItem('token');
             const response = await axios.post(
-                `${API_BASE_URL}/api/conversations/${selectedId}/messages`,
+                `${API_BASE_URL}/api/chats/${selectedId}/messages`,
                 {
                     text,
                     attachment_name: attachment?.name || '',
@@ -215,7 +215,7 @@ function Messages() {
         const text = window.prompt('Edit message', message.text);
         if (text === null || !text.trim()) return;
         try {
-            await axios.put(`${API_BASE_URL}/api/conversations/${selectedId}/messages/${message.id}`, { text: text.trim() }, {
+            await axios.put(`${API_BASE_URL}/api/chats/${selectedId}/messages/${message.id}`, { text: text.trim() }, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
             });
         } catch (error) {
@@ -226,7 +226,7 @@ function Messages() {
     const deleteMessage = async (message) => {
         if (!window.confirm('Delete this message?')) return;
         try {
-            await axios.delete(`${API_BASE_URL}/api/conversations/${selectedId}/messages/${message.id}`, {
+            await axios.delete(`${API_BASE_URL}/api/chats/${selectedId}/messages/${message.id}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
             });
         } catch (error) {
@@ -432,4 +432,4 @@ function Messages() {
     );
 }
 
-export default Messages;
+export default Chats;
